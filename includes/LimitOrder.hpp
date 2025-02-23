@@ -1,14 +1,11 @@
 #ifndef LIMITORDER_HPP
 #define LIMITORDER_HPP
 
-struct LimitOrder {
+#include "Order.hpp"
 
-  int orderID;
-  int traderID;
-  bool isBuy;
+struct LimitOrder : public Order {
+
   double price;
-  int quantity;
-  long timestamp;
 
   // Default constructor
   LimitOrder() = default;
@@ -16,8 +13,7 @@ struct LimitOrder {
   // Constructor with initialization list
   LimitOrder(int orderID, int traderID, bool isBuy, double price, int quantity,
              long timestamp)
-      : orderID(orderID), traderID(traderID), isBuy(isBuy), price(price),
-        quantity(quantity), timestamp(timestamp) {}
+      : Order(orderID, traderID, isBuy, quantity, timestamp), price(price) {}
 };
 
 #endif // LIMITORDER_HPP
