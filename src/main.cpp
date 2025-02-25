@@ -6,7 +6,7 @@ int main() {
   // Create the matching engine
   MatchingEngine matchingEngine = MatchingEngine();
 
-  // Add orders to the order book
+  // Add Limit orders to the order book
   OrderBook::getOrderBook()->addOrder(
       new LimitOrder(1, 101, true, 100.0, 50, 1));
   OrderBook::getOrderBook()->addOrder(
@@ -18,14 +18,25 @@ int main() {
   OrderBook::getOrderBook()->addOrder(
       new LimitOrder(5, 202, false, 100.0, 120, 5));
 
+  // Add Market orders to the order book
+  OrderBook::getOrderBook()->addOrder(new MarketOrder(6, 301, true, 100, 6));
+
+  std::cout << "---------------------\n";
+
   // Print the order book
   matchingEngine.printOrderBook();
+
+  std::cout << "---------------------\n";
 
   // Execute the matching engine
   matchingEngine.executeMatchingEngine();
 
+  std::cout << "---------------------\n";
+
   // Print the order book
   matchingEngine.printOrderBook();
+
+  std::cout << "---------------------\n";
 
   return 0;
 }

@@ -2,6 +2,8 @@
 #define MATCHINGENGINE_HPP
 
 #include "LimitOrder.hpp"
+#include "MarketOrder.hpp"
+#include <deque>
 
 class MatchingEngine {
 public:
@@ -13,6 +15,11 @@ public:
 
 private:
   void matchOrders();
+  void processMarketOrders();
+  void matchMarketOrder(MarketOrder &marketOrder,
+                        std::deque<LimitOrder> &orderQueue);
+  void processStopOrders();
+  void processLimitOrders();
 };
 
 #endif // MATCHINGENGINE_HPP

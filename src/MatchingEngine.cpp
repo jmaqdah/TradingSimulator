@@ -4,12 +4,18 @@
 #include <iostream>
 
 void MatchingEngine::printOrderBook() {
-  std::cout << "Buy Orders:\n";
+
+  std::cout << "Limit Buy Orders:\n";
   for (const auto &buyOrder : OrderBook::getOrderBook()->buyOrders) {
     std::cout << "Price: $" << buyOrder.first << "\n";
     for (const auto &order : buyOrder.second) {
       std::cout << "  Quantity: " << order.quantity << "\n";
     }
+  }
+
+  std::cout << "Market Buy Orders:\n";
+  for (const auto &buyOrder : OrderBook::getOrderBook()->marketBuyOrders) {
+    std::cout << "  Quantity: " << buyOrder.quantity << "\n";
   }
 
   std::cout << "Sell Orders:\n";
@@ -19,9 +25,84 @@ void MatchingEngine::printOrderBook() {
       std::cout << "  Quantity: " << order.quantity << "\n";
     }
   }
+
+  std::cout << "Market Sell Orders:\n";
+  for (const auto &sellOrder : OrderBook::getOrderBook()->marketSellOrders) {
+    std::cout << "  Quantity: " << sellOrder.quantity << "\n";
+  }
+
+  std::cout << "Stop Orders:\n";
+  for (const auto &stopOrder : OrderBook::getOrderBook()->stopOrders) {
+    std::cout << "  Price: $" << stopOrder.stopPrice << "\n";
+    std::cout << "  Quantity: " << stopOrder.quantity << "\n";
+  }
 }
 
 void MatchingEngine::matchOrders() {
+  // Step 1: Process Market Orders
+  processMarketOrders();
+  // Step 2: Process Stop Orders
+  processStopOrders();
+  // Step 3: Process Limit Orders
+  processLimitOrders();
+}
+
+void MatchingEngine::processMarketOrders() {
+  // Loop over market buy orders and match with the lowest sell orders
+  while (!OrderBook::getOrderBook()->marketBuyOrders.empty() &&
+         !OrderBook::getOrderBook()->sellOrders.empty()) {
+
+    auto &marketBuyOrder = OrderBook::getOrderBook()->marketBuyOrders.front();
+    auto &sellQueue = OrderBook::getOrderBook()->sellOrders.begin()->second;
+
+    // Match the market buy order with the lowest sell orders
+    matchMarketOrder(marketBuyOrder, sellQueue);
+
+    // If after matching the market buy order quantity is 0, remove it
+    if (marketBuyOrder.quantity == 0)
+      OrderBook::getOrderBook()->marketBuyOrders.pop_front();
+  }
+
+  // Loop over market sell orders and match with the highest buy orders
+  while (!OrderBook::getOrderBook()->marketSellOrders.empty() &&
+         !OrderBook::getOrderBook()->buyOrders.empty()) {
+
+    auto &marketSellOrder = OrderBook::getOrderBook()->marketSellOrders.front();
+    auto &buyQueue = OrderBook::getOrderBook()->buyOrders.rbegin()->second;
+
+    // Match the market sell order with the highest buy orders
+    matchMarketOrder(marketSellOrder, buyQueue);
+
+    // If after matching the market sell order quantity is 0, remove it
+    if (marketSellOrder.quantity == 0)
+      OrderBook::getOrderBook()->marketSellOrders.pop_front();
+  }
+}
+
+void MatchingEngine::matchMarketOrder(MarketOrder &marketOrder,
+                                      std::deque<LimitOrder> &orderQueue) {
+  // Loop over the order queue and match the market order
+  for (auto it = orderQueue.begin();
+       it != orderQueue.end() && marketOrder.quantity > 0;) {
+
+    // Get the matched quantity
+    int matchQty = std::min(marketOrder.quantity, it->quantity);
+
+    // Subtract the matched quantity from the market order and the limit order
+    marketOrder.quantity -= matchQty;
+    it->quantity -= matchQty;
+
+    // Remove the limit order if it is fully matched then point to the next
+    if (it->quantity == 0)
+      it = orderQueue.erase(it);
+    else
+      ++it;
+  }
+}
+
+void MatchingEngine::processStopOrders() {}
+
+void MatchingEngine::processLimitOrders() {
   // Loop through all the sell orders
   for (auto it = OrderBook::getOrderBook()->sellOrders.begin();
        it != OrderBook::getOrderBook()->sellOrders.end();) {
