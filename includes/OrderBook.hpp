@@ -8,12 +8,11 @@
 #include "MarketOrder.hpp"
 #include "StopOrder.hpp"
 
-// I have made the OrderBook class a singleton class
-
 class OrderBook {
 
 public:
-  static OrderBook *getOrderBook();
+  OrderBook() = default;
+  ~OrderBook() = default;
 
   std::map<double, std::deque<LimitOrder>> buyOrders;
   std::map<double, std::deque<LimitOrder>> sellOrders;
@@ -24,8 +23,6 @@ public:
   void addOrder(Order *order);
 
 private:
-  OrderBook();
-  ~OrderBook();
   void addLimitOrder(const LimitOrder &limitOrder);
   void addMarketOrder(const MarketOrder &marketOrder);
   void addStopOrder(const StopOrder &stopOrder);
