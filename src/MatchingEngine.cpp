@@ -55,6 +55,9 @@ void MatchingEngine::processMarketOrders() {
     auto &marketBuyOrder = OrderBook::getOrderBook()->marketBuyOrders.front();
     auto &sellQueue = OrderBook::getOrderBook()->sellOrders.begin()->second;
 
+    // Update the last traded price
+    setLastTradedPrice(OrderBook::getOrderBook()->sellOrders.begin()->first);
+
     // Match the market buy order with the lowest sell orders
     matchMarketOrder(marketBuyOrder, sellQueue);
 
@@ -69,6 +72,9 @@ void MatchingEngine::processMarketOrders() {
 
     auto &marketSellOrder = OrderBook::getOrderBook()->marketSellOrders.front();
     auto &buyQueue = OrderBook::getOrderBook()->buyOrders.rbegin()->second;
+
+    // Update the last traded price
+    setLastTradedPrice(OrderBook::getOrderBook()->buyOrders.begin()->first);
 
     // Match the market sell order with the highest buy orders
     matchMarketOrder(marketSellOrder, buyQueue);
@@ -100,7 +106,35 @@ void MatchingEngine::matchMarketOrder(MarketOrder &marketOrder,
   }
 }
 
-void MatchingEngine::processStopOrders() {}
+void MatchingEngine::processStopOrders() {
+  auto &stopOrders = OrderBook::getOrderBook()->stopOrders;
+  // Flag to check if any stop orders have been triggered
+  bool newMarketOrders = false;
+
+  for (auto it = stopOrders.begin(); it != stopOrders.end();) {
+    StopOrder &stopOrder = *it;
+
+    bool trigger =
+        (stopOrder.isBuy && stopOrder.stopPrice <= getLatestTradedPrice()) ||
+        (!stopOrder.isBuy && stopOrder.stopPrice >= getLatestTradedPrice());
+
+    if (trigger) {
+      OrderBook::getOrderBook()->addOrder(new MarketOrder(
+          stopOrder.orderID, stopOrder.traderID, stopOrder.isBuy,
+          stopOrder.quantity, stopOrder.timestamp));
+      it = stopOrders.erase(it);
+      // Atleast one stop order has been triggered
+      newMarketOrders = true;
+    } else {
+      ++it;
+    }
+  }
+
+  // Process newly created market orders
+  if (newMarketOrders) {
+    processMarketOrders();
+  }
+}
 
 void MatchingEngine::processLimitOrders() {
   // Loop through all the sell orders
@@ -116,6 +150,9 @@ void MatchingEngine::processLimitOrders() {
       ++it;
       continue;
     }
+
+    // If a buy order has been found then update the last traded price
+    setLastTradedPrice(sellPrice);
 
     auto &sellQueue = it->second;
     auto &buyQueue = OrderBook::getOrderBook()->buyOrders[sellPrice];
@@ -168,4 +205,23 @@ void MatchingEngine::processLimitOrders() {
 void MatchingEngine::executeMatchingEngine() {
   std::cout << "Matching Engine Started!" << std::endl;
   matchOrders();
+}
+
+double MatchingEngine::getLatestTradedPrice() {
+  // If the last traded price has not been set, calculate it using the midpoint
+  // of the best bid and ask
+  if (m_lastTradedPrice == 0.0) {
+    if (OrderBook::getOrderBook()->buyOrders.empty() ||
+        OrderBook::getOrderBook()->sellOrders.empty()) {
+      return 0.0; // No market price available
+    }
+
+    double bestBid = OrderBook::getOrderBook()->buyOrders.rbegin()->first;
+    double bestAsk = OrderBook::getOrderBook()->sellOrders.begin()->first;
+
+    return (bestBid + bestAsk) / 2.0;
+  } else {
+    // Else just returnt he last traded price
+    return m_lastTradedPrice;
+  }
 }

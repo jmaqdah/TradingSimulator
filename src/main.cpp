@@ -21,6 +21,10 @@ int main() {
   // Add Market orders to the order book
   OrderBook::getOrderBook()->addOrder(new MarketOrder(6, 301, true, 100, 6));
 
+  // Add Stop orders to the order book
+  OrderBook::getOrderBook()->addOrder(
+      new StopOrder(7, 401, true, 100.0, 50, 7));
+
   std::cout << "---------------------\n";
 
   // Print the order book

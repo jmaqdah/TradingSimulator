@@ -13,6 +13,12 @@ public:
   void printOrderBook();
   void executeMatchingEngine();
 
+  void setLastTradedPrice(double lastTradedPrice) {
+    m_lastTradedPrice = lastTradedPrice;
+  }
+
+  double getLatestTradedPrice();
+
 private:
   void matchOrders();
   void processMarketOrders();
@@ -20,6 +26,7 @@ private:
                         std::deque<LimitOrder> &orderQueue);
   void processStopOrders();
   void processLimitOrders();
+  double m_lastTradedPrice = 0.0;
 };
 
 #endif // MATCHINGENGINE_HPP
