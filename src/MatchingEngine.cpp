@@ -5,36 +5,36 @@
 
 void MatchingEngine::printOrderBook() {
 
-  std::cout << "Limit Buy Orders:\n";
+  std::cout << "- Limit Buy Orders:\n";
   for (const auto &buyOrder : OrderBook::getOrderBook()->buyOrders) {
-    std::cout << "Price: $" << buyOrder.first << "\n";
+    std::cout << "    Price: $" << buyOrder.first << "\n";
     for (const auto &order : buyOrder.second) {
-      std::cout << "  Quantity: " << order.quantity << "\n";
+      std::cout << "      Quantity: " << order.quantity << "\n";
     }
   }
 
-  std::cout << "Market Buy Orders:\n";
+  std::cout << "- Market Buy Orders:\n";
   for (const auto &buyOrder : OrderBook::getOrderBook()->marketBuyOrders) {
-    std::cout << "  Quantity: " << buyOrder.quantity << "\n";
+    std::cout << "    Quantity: " << buyOrder.quantity << "\n";
   }
 
-  std::cout << "Sell Orders:\n";
+  std::cout << "- Limit Sell Orders:\n";
   for (const auto &sellOrder : OrderBook::getOrderBook()->sellOrders) {
-    std::cout << "Price: $" << sellOrder.first << "\n";
+    std::cout << "    Price: $" << sellOrder.first << "\n";
     for (const auto &order : sellOrder.second) {
-      std::cout << "  Quantity: " << order.quantity << "\n";
+      std::cout << "      Quantity: " << order.quantity << "\n";
     }
   }
 
-  std::cout << "Market Sell Orders:\n";
+  std::cout << "- Market Sell Orders:\n";
   for (const auto &sellOrder : OrderBook::getOrderBook()->marketSellOrders) {
-    std::cout << "  Quantity: " << sellOrder.quantity << "\n";
+    std::cout << "    Quantity: " << sellOrder.quantity << "\n";
   }
 
-  std::cout << "Stop Orders:\n";
+  std::cout << "- Stop Orders:\n";
   for (const auto &stopOrder : OrderBook::getOrderBook()->stopOrders) {
-    std::cout << "  Price: $" << stopOrder.stopPrice << "\n";
-    std::cout << "  Quantity: " << stopOrder.quantity << "\n";
+    std::cout << "    Price: $" << stopOrder.stopPrice << "\n";
+    std::cout << "    Quantity: " << stopOrder.quantity << "\n";
   }
 }
 
