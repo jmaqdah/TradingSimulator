@@ -76,6 +76,10 @@ void MatchingEngine::processMarketOrders() {
 
     // Update the last traded price
     setLastTradedPrice(m_orderBook->buyOrders.begin()->first);
+    // We pass false to prevent the execution of market orders recursively, we
+    // just want to add to the orderbook. Note: current market orders take
+    // precedence over newly created market orders from stop orders
+    processStopOrders(false);
 
     // Match the market sell order with the highest buy orders
     matchMarketOrder(marketSellOrder, buyQueue);
@@ -118,6 +122,11 @@ void MatchingEngine::processStopOrders(bool executeMarketOrders) {
 
   for (auto it = stopOrders.begin(); it != stopOrders.end();) {
     StopOrder &stopOrder = *it;
+
+    if (getLatestTradedPrice() == -1.0) {
+      // No market price available
+      break;
+    }
 
     bool trigger =
         (stopOrder.isBuy && stopOrder.stopPrice <= getLatestTradedPrice()) ||
@@ -214,7 +223,7 @@ double MatchingEngine::getLatestTradedPrice() {
   if (m_lastTradedPrice == 0.0) {
     if (m_orderBook->buyOrders.empty() || m_orderBook->sellOrders.empty()) {
       // No market price available
-      return 0.0;
+      return -1.0;
     }
 
     double bestBid = m_orderBook->buyOrders.rbegin()->first;
@@ -235,6 +244,9 @@ void MatchingEngine::addOrder(Order *order) {
   m_orderBook->addOrder(order);
 
   if (LimitOrder *limitOrder = dynamic_cast<LimitOrder *>(order)) {
+    // Before we process limit orders, we need to process market orders that
+    // might be compatable with the newly added limit order
+    processMarketOrders();
     processLimitOrders();
   } else if (MarketOrder *marketOrder = dynamic_cast<MarketOrder *>(order)) {
     processMarketOrders();
